@@ -1,5 +1,4 @@
 /**
- * this package contains all retransform info
- * first: listen file changed
+ * this package contains all hot swap function
  */
 package com.ggggght.retransform;
