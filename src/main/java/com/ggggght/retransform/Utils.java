@@ -1,9 +1,15 @@
 package com.ggggght.retransform;
 
+import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.roots.ModuleRootManager;
 import com.sun.tools.attach.VirtualMachine;
 import com.sun.tools.attach.VirtualMachineDescriptor;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
+import com.intellij.openapi.module.Module;
+import org.jetbrains.annotations.NotNull;
 
 public final class Utils {
   public static void retransform() {
@@ -27,12 +33,51 @@ public final class Utils {
    * @param projectName 项目名
    * @return pid
    */
-  public static Long getCurrentProjectPid(String projectName) {
+  public static Long getCurrentProjectPid(@NotNull String projectName) {
     return VirtualMachine.list().stream()
         .filter(virtualMachineDescriptor -> virtualMachineDescriptor.displayName()
             .contains(projectName))
         .findFirst()
         .map(virtualMachineDescriptor -> Long.valueOf(virtualMachineDescriptor.id()))
         .orElse(-1L);
+  }
+
+  /**
+   * 获取当前模块所使用的jdk版本
+   * @param module 当前模块
+   * @return jdkVersion
+   */
+  public static String getJdkVersion(@NotNull Module module) {
+    ModuleRootManager moduleRootManager = ModuleRootManager.getInstance(module);
+    Sdk SDK = moduleRootManager.getSdk();
+
+    return Objects.isNull(SDK) ? "" : SDK.getVersionString();
+  }
+
+  /**
+   * 获取当前模块使用的jdk的家目录
+   * @param module 当前模块
+   * @return jdkHomePath
+   */
+  public static String getJdkHomePath(@NotNull Module module) {
+    ModuleRootManager moduleRootManager = ModuleRootManager.getInstance(module);
+    Sdk SDK = moduleRootManager.getSdk();
+
+    return Objects.isNull(SDK) ? "" : SDK.getHomePath();
+  }
+
+  /**
+   * 获取当前模块所有的依赖
+   * @param module 当前模块
+   * @return List<String>
+   */
+  public static List<String> getAllDependencies(@NotNull Module module) {
+    List<String> libraries = new ArrayList<>();
+    ModuleRootManager.getInstance(module).orderEntries().forEachLibrary(library -> {
+      libraries.add(library.getName());
+      return true;
+    });
+
+    return libraries;
   }
 }
