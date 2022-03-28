@@ -23,6 +23,13 @@ version = properties("pluginVersion")
 repositories {
     mavenCentral()
 }
+dependencies {
+    implementation("org.ow2.asm:asm:9.2")
+    // https://mvnrepository.com/artifact/org.springframework/spring-webflux
+    implementation("org.springframework:spring-webflux:5.3.17")
+    implementation("org.springframework:spring-webmvc:5.3.17")
+
+}
 
 // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
 intellij {
@@ -70,17 +77,17 @@ tasks {
         untilBuild.set(properties("pluginUntilBuild"))
 
         // Extract the <!-- Plugin description --> section from README.md and provide for the plugin's manifest
-        pluginDescription.set(
-            projectDir.resolve("README.md").readText().lines().run {
-                val start = "<!-- Plugin description -->"
-                val end = "<!-- Plugin description end -->"
-
-                if (!containsAll(listOf(start, end))) {
-                    throw GradleException("Plugin description section not found in README.md:\n$start ... $end")
-                }
-                subList(indexOf(start) + 1, indexOf(end))
-            }.joinToString("\n").run { markdownToHTML(this) }
-        )
+        // pluginDescription.set(
+        //     projectDir.resolve("README.md").readText().lines().run {
+        //         val start = "<!-- Plugin description -->"
+        //         val end = "<!-- Plugin description end -->"
+        //
+        //         if (!containsAll(listOf(start, end))) {
+        //             throw GradleException("Plugin description section not found in README.md:\n$start ... $end")
+        //         }
+        //         subList(indexOf(start) + 1, indexOf(end))
+        //     }.joinToString("\n").run { markdownToHTML(this) }
+        // )
 
         // Get the latest available change notes from the changelog file
         changeNotes.set(provider {
