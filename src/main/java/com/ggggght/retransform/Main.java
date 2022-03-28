@@ -1,5 +1,9 @@
 package com.ggggght.retransform;
 
+import com.intellij.execution.ExecutionListener;
+import com.intellij.execution.ExecutionManager;
+import com.intellij.execution.process.ProcessHandler;
+import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
@@ -17,6 +21,11 @@ public class Main implements ProjectManagerListener {
   Project project;
 
   boolean isWebProject;
+
+  // 保存当前服务的pid
+  Long pid;
+
+  String projectName;
 
   @Override public void projectOpened(@NotNull Project project) {
     ProjectManagerListener.super.projectOpened(project);
@@ -46,7 +55,22 @@ public class Main implements ProjectManagerListener {
         new XDebuggerManagerListener() {
           @Override public void processStarted(@NotNull XDebugProcess debugProcess) {
             XDebuggerManagerListener.super.processStarted(debugProcess);
-            System.out.println("debugger services...");
+            pid = Utils.getCurrentProjectPid(projectName);
+          }
+        }
+    );
+
+    // 监听服务启动
+    // https://intellij-support.jetbrains.com/hc/en-us/community/posts/4833708195474-How-do-I-listen-to-run-events-within-my-own-intellij-plugin-
+    project.getMessageBus().connect().subscribe(
+        ExecutionManager.EXECUTION_TOPIC,
+        new ExecutionListener() {
+          @Override
+          public void processStarting(@NotNull String executorId, @NotNull ExecutionEnvironment env,
+              @NotNull ProcessHandler handler) {
+            ExecutionListener.super.processStarting(executorId, env, handler);
+            pid = Utils.getCurrentProjectPid(projectName);
+            System.out.println("服务启动了...");
           }
         }
     );
@@ -55,6 +79,7 @@ public class Main implements ProjectManagerListener {
     ModuleManager moduleManager = ModuleManager.getInstance(project);
     Module[] modules = moduleManager.getModules();
     isWebProject = Utils.isWebModule(modules[0]);
+    projectName = modules[0].getName();
   }
 
 
