@@ -4,12 +4,22 @@ import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.sun.tools.attach.VirtualMachine;
 import com.sun.tools.attach.VirtualMachineDescriptor;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import com.intellij.openapi.module.Module;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.boot.WebApplicationType;
 
 public final class Utils {
   public static void retransform() {
@@ -17,9 +27,7 @@ public final class Utils {
   }
 
   /**
-   * 列出当前所有的java进程
-   *
-   * @return 当前机器所有的java进程
+   * get current machine all java process id
    */
   public static List<Long> getAllJavaProcessId() {
     return VirtualMachine.list()
@@ -30,9 +38,8 @@ public final class Utils {
   }
 
   /**
-   * 找到当前项目的pid 如果为-1 则意为当前项目未启动
-   *
-   * @param projectName 项目名
+   * get special project pid
+   * @param projectName
    * @return pid
    */
   public static Long getCurrentProjectPid(@NotNull String projectName) {
@@ -45,7 +52,7 @@ public final class Utils {
   }
 
   /**
-   * 获取当前模块所使用的jdk版本
+   * return current module used jdk version
    *
    * @param module 当前模块
    * @return jdkVersion
@@ -71,13 +78,13 @@ public final class Utils {
   }
 
   /**
-   * 获取当前模块所有的依赖
+   * return all dependencies
    *
    * @param module 当前模块
    * @return List<String>
    */
-  public static List<String> getAllDependencies(@NotNull Module module) {
-    List<String> libraries = new ArrayList<>();
+  public static Set<String> getAllDependencies(@NotNull Module module) {
+    HashSet<String> libraries = new HashSet<>();
     ModuleRootManager.getInstance(module).orderEntries().forEachLibrary(library -> {
       String[] split = Objects.requireNonNull(library.getName()).split(":");
       libraries.add(split[2]);
@@ -92,9 +99,35 @@ public final class Utils {
    * @param module 当前模块
    * @return isWebModule
    */
-  public static boolean isWebModule(@NotNull Module module) {
-    List<String> dependencies = getAllDependencies(module);
-    return dependencies.contains("spring-boot-starter-web") || dependencies.contains(
-        "spring-boot-starter-webflux");
+  public static WebApplicationType isWebModule(@NotNull Module module) {
+    Set<String> dependencies = getAllDependencies(module);
+    if (dependencies.contains("spring-boot-starter-web")) {
+      return WebApplicationType.SERVLET;
+    }
+
+    if (dependencies.contains("spring-boot-starter-webflux")) {
+      return WebApplicationType.REACTIVE;
+    }
+    return WebApplicationType.NONE;
+  }
+
+  /**
+   * read content from file
+   * @param file
+   * @param encoding
+   * @return
+   * @throws IOException
+   */
+  public static String readFileToString(File file, Charset encoding) throws IOException {
+    try (FileInputStream stream = new FileInputStream(file)) {
+      Reader reader = new BufferedReader(new InputStreamReader(stream, encoding));
+      StringBuilder builder = new StringBuilder();
+      char[] buffer = new char[8192];
+      int read;
+      while ((read = reader.read(buffer, 0, buffer.length)) > 0) {
+        builder.append(buffer, 0, read);
+      }
+      return builder.toString();
+    }
   }
 }

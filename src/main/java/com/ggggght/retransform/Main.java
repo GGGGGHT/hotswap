@@ -15,17 +15,14 @@ import com.intellij.xdebugger.XDebugProcess;
 import com.intellij.xdebugger.XDebuggerManager;
 import com.intellij.xdebugger.XDebuggerManagerListener;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.boot.WebApplicationType;
 
 public class Main implements ProjectManagerListener {
 
   Project project;
-
-  boolean isWebProject;
-
-  // 保存当前服务的pid
   Long pid;
-
   String projectName;
+  WebApplicationType webApplicationType;
 
   @Override public void projectOpened(@NotNull Project project) {
     ProjectManagerListener.super.projectOpened(project);
@@ -78,8 +75,7 @@ public class Main implements ProjectManagerListener {
 
     ModuleManager moduleManager = ModuleManager.getInstance(project);
     Module[] modules = moduleManager.getModules();
-    isWebProject = Utils.isWebModule(modules[0]);
-    projectName = modules[0].getName();
+    webApplicationType = Utils.isWebModule(modules[0]);
   }
 
 

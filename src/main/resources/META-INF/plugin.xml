@@ -8,12 +8,10 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <applicationService serviceImplementation="com.github.ggggght.hotswap.services.MyApplicationService"/>
-<!--        <projectService serviceImplementation="com.github.ggggght.hotswap.services.MyProjectService"/>-->
         <projectService serviceImplementation="com.ggggght.retransform.Main"/>
     </extensions>
 
     <applicationListeners>
-
         <listener class="com.ggggght.retransform.Main"
                   topic="com.intellij.openapi.project.ProjectManagerListener"/>
     </applicationListeners>
