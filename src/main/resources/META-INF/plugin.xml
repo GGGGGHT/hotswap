@@ -5,9 +5,9 @@
     <vendor>ggggght</vendor>
 
     <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.java</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <applicationService serviceImplementation="com.github.ggggght.hotswap.services.MyApplicationService"/>
         <projectService serviceImplementation="com.ggggght.retransform.Main"/>
     </extensions>
 
@@ -15,4 +15,8 @@
         <listener class="com.ggggght.retransform.Main"
                   topic="com.intellij.openapi.project.ProjectManagerListener"/>
     </applicationListeners>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <runConfigurationExtension implementation="com.ggggght.retransform.RunConfig"/>
+    </extensions>
 </idea-plugin>
