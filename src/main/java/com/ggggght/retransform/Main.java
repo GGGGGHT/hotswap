@@ -66,7 +66,7 @@ public class Main implements ProjectManagerListener {
           public void processStarting(@NotNull String executorId, @NotNull ExecutionEnvironment env,
               @NotNull ProcessHandler handler) {
             ExecutionListener.super.processStarting(executorId, env, handler);
-            pid = Utils.getCurrentProjectPid(projectName);
+            // pid = Utils.getCurrentProjectPid(projectName);
             System.out.println("服务启动了...");
           }
         }

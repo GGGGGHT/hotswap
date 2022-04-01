@@ -21,6 +21,7 @@ version = properties("pluginVersion")
 
 // Configure project's dependencies
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
@@ -31,6 +32,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web:2.6.4")
     implementation("org.springframework.boot:spring-boot-starter-webflux:2.6.4")
     implementation("org.javassist:javassist:3.22.0-GA")
+    implementation("org.example:agent:1.0-SNAPSHOT")
 }
 
 // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin

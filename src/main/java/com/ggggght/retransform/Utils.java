@@ -86,8 +86,7 @@ public final class Utils {
   public static Set<String> getAllDependencies(@NotNull Module module) {
     HashSet<String> libraries = new HashSet<>();
     ModuleRootManager.getInstance(module).orderEntries().forEachLibrary(library -> {
-      String[] split = Objects.requireNonNull(library.getName()).split(":");
-      libraries.add(split[2]);
+      libraries.add(library.getName());
       return true;
     });
 
