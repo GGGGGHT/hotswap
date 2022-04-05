@@ -17,6 +17,7 @@ java {
 
 dependencies {
     implementation("org.javassist:javassist:3.22.0-GA")
+    implementation("org.ow2.asm:asm:9.2")
 }
 
 tasks.jar {

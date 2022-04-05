@@ -1,5 +1,8 @@
 package com.ggggght.agent;
 
+import com.ggggght.agent.enhancer.ASMEnhancer;
+import com.ggggght.agent.enhancer.Enhancer;
+import com.ggggght.agent.enhancer.JavassistEnhancer;
 import java.lang.instrument.Instrumentation;
 
 public class Launcher {
@@ -12,7 +15,7 @@ public class Launcher {
     System.out.println("[Agent] In premain method");
 
     transformClass(DISPATCH_SERVLET, inst);
-    transformClass(DISPATCH_HANDLER, inst);
+    // transformClass(DISPATCH_HANDLER, inst);
 
     System.out.println("[Agent] end");
   }
@@ -43,7 +46,9 @@ public class Launcher {
 
   private static void transform(Class<?> clazz, ClassLoader classLoader, Instrumentation instrumentation) {
     // AtmTransformer dt = new AtmTransformer(clazz.getName(), classLoader);
-    // instrumentation.addTransformer(dt, true);
+    // ASMEnhancer asmEnhancer = new ASMEnhancer(clazz.getName(), classLoader);
+    Enhancer enhancer = new JavassistEnhancer(clazz.getName(), classLoader);
+    instrumentation.addTransformer(enhancer, true);
     try {
       instrumentation.retransformClasses(clazz);
     } catch (Exception ex) {
