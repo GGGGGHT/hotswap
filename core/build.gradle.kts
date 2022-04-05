@@ -24,13 +24,13 @@ repositories {
 }
 
 dependencies {
+    implementation(project(":agent"))
     implementation("com.h2database:h2:2.1.210")
     implementation("org.apache.httpcomponents:httpclient:4.5.5")
     implementation("org.springframework.boot:spring-boot-starter-validation:2.6.4")
     implementation("org.springframework.boot:spring-boot-starter-web:2.6.4")
     implementation("org.springframework.boot:spring-boot-starter-webflux:2.6.4")
     implementation("org.javassist:javassist:3.22.0-GA")
-    implementation("org.example:agent:1.0-SNAPSHOT")
 }
 
 // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
