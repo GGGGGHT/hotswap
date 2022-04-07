@@ -18,6 +18,8 @@ java {
 dependencies {
     implementation("org.javassist:javassist:3.22.0-GA")
     implementation("org.ow2.asm:asm:9.2")
+    implementation("com.h2database:h2:2.1.210")
+    implementation("org.springframework.data:spring-data-jpa:2.6.3")
 }
 
 tasks.jar {
