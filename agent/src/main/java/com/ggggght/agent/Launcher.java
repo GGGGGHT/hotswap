@@ -46,8 +46,8 @@ public class Launcher {
 
   private static void transform(Class<?> clazz, ClassLoader classLoader, Instrumentation instrumentation) {
     // AtmTransformer dt = new AtmTransformer(clazz.getName(), classLoader);
-    // ASMEnhancer asmEnhancer = new ASMEnhancer(clazz.getName(), classLoader);
-    Enhancer enhancer = new JavassistEnhancer(clazz.getName(), classLoader);
+    Enhancer enhancer = new ASMEnhancer(clazz.getName(), classLoader);
+    // Enhancer enhancer = new JavassistEnhancer(clazz.getName(), classLoader);
     instrumentation.addTransformer(enhancer, true);
     try {
       instrumentation.retransformClasses(clazz);
