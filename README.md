@@ -55,7 +55,7 @@ hotswap是一个免费,开源的Intellij Idea插件.通过这个插件可以实�
   <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
 
 
-## Contact
+## Contact 
 
 Join us at [Discord](https://jq.qq.com/?_wv=1027&k=FTfrpC0b) or contact us via [contact@hotswap.com](mailto:wz9712203617@gmail.com)
 
@@ -74,6 +74,7 @@ We appreciate your contribution to anything in the game:
 Please read the [contributing guide]() before you start.
 
 ---
+
 Plugin based on the [IntelliJ Platform Plugin Template][template].
 
 [template]: https://github.com/JetBrains/intellij-platform-plugin-template
