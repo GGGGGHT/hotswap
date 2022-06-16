@@ -1,5 +1,6 @@
 plugins {
-    id ("java")
+    // Java support
+    id("java")
 }
 
 group = "helloworld.hotswap"
@@ -30,7 +31,7 @@ tasks.jar {
         attributes(
             "Implementation-Title" to "Gradle",
             "Implementation-Version" to archiveVersion,
-            "Premain-Class" to "com.ggggght.agent.Launcher",
+            "Premain-Class" to "com.ggggght.agent.AgentBootstrap",
             "Can-Redefine-Classes" to true,
             "Can-Retransform-Classes" to true,
         )
