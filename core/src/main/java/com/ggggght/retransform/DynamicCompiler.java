@@ -35,7 +35,6 @@ public class DynamicCompiler {
 
 
         options.add("-Xlint:unchecked");
-        options.add("-classpath");
         dynamicClassLoader = new DynamicClassLoader(classLoader);
     }
 
@@ -93,7 +92,6 @@ public class DynamicCompiler {
             throw new DynamicCompilerException(e, errors);
         } finally {
             compilationUnits.clear();
-
         }
 
     }
@@ -171,6 +169,6 @@ public class DynamicCompiler {
     }
 
     public static void addCompilerOption(String option) {
-        options.add(option);
+        options.addAll(Arrays.asList("-classpath", option));
     }
 }

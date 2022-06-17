@@ -7,16 +7,22 @@ public class CoreBootstrap {
     private static Instrumentation instrumentation;
     private static CoreBootstrap coreBootstrap;
     private static AtomicBoolean isBindRef = new AtomicBoolean(false);
-    private CoreBootstrap(Instrumentation instrumentation) {
+    public static ClassLoader classLoader;
+    private CoreBootstrap(Instrumentation instrumentation,ClassLoader classLoader) {
         this.instrumentation = instrumentation;
+        this.classLoader = classLoader;
     }
 
-    public synchronized static CoreBootstrap getInstance(Instrumentation instrumentation, String args) throws Throwable {
+    public static CoreBootstrap getInstance() {
+        return coreBootstrap;
+    }
+
+    public synchronized static CoreBootstrap getInstance(Instrumentation instrumentation,ClassLoader classLoader) throws Throwable {
         if (coreBootstrap != null) {
             return coreBootstrap;
         }
 
-        coreBootstrap = new CoreBootstrap(instrumentation);
+        coreBootstrap = new CoreBootstrap(instrumentation,classLoader);
         if (!isBindRef.compareAndSet(false, true)) {
             throw new IllegalStateException("already bind");
         }

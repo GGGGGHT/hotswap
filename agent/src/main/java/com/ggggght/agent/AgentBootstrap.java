@@ -4,9 +4,8 @@ package com.ggggght.agent;
 // import com.intellij.openapi.extensions.PluginId;
 import java.io.File;
 import java.lang.instrument.Instrumentation;
+import java.lang.reflect.Field;
 import java.net.URL;
-import java.nio.file.Path;
-import java.util.Objects;
 
 /**
  * 代理启动类
@@ -27,25 +26,35 @@ public class AgentBootstrap {
     }
 
     private static synchronized void main(String args, final Instrumentation inst) throws Throwable{
-        String agentPath = "/Users/wangzheng/github/hotswap/core/build/idea-sandbox/plugins/hotswap/lib/core-0.0.1.jar";
+        System.out.println("AgentBootstrap#main");
+        String corePath = "/Users/wangzheng/github/hotswap/core/build/idea-sandbox/plugins/hotswap/lib/core-0.0.1.jar";
 
-        File file = new File(agentPath);
+        File file = new File(corePath);
         if (!file.exists()) {
             System.out.println("core-0.0.1.jar not found");
             return;
         }
-        final ClassLoader agentLoader = getClassLoader(file);
-        Class<?> bootstrapClass = agentLoader.loadClass(BOOTSTRAP);
-        Object bootstrap = bootstrapClass.getMethod(GET_INSTANCE, Instrumentation.class, String.class).invoke(null, inst, args);
-        boolean isBind = (Boolean) bootstrapClass.getMethod(IS_BIND).invoke(bootstrap);
-        Class<?> mainClass = agentLoader.loadClass(MAINCLASS);
-        mainClass.getDeclaredField("classLoader").set(null, agentLoader);
 
-        if (!isBind) {
-            String errorMsg = "binding failed! .log for more details.";
-            throw new RuntimeException(errorMsg);
-        }
+        ClassLoader classloader = AgentBootstrap.class.getClassLoader();
+
+        // final ClassLoader agentLoader = getClassLoader(file);
+
+        Class<?> bootstrapClass = classloader.loadClass(BOOTSTRAP);
+        Object bootstrap = bootstrapClass.getMethod(GET_INSTANCE, Instrumentation.class,ClassLoader.class).invoke(null, inst,classloader);
+        boolean isBind = (Boolean) bootstrapClass.getMethod(IS_BIND).invoke(bootstrap);
+        System.out.println("bootstrapClass = " + bootstrapClass);
+        System.out.println("agentBootStrap class loader  = " + classloader);
+        System.out.println("==================================================");
+
+        System.getProperties().put("INSTRUMENTATION_KEY", inst);
+        System.getProperties().put("CLASSLOADER_KEY", classloader);
+        // if (!isBind) {
+        //     String errorMsg = "binding failed! .log for more details.";
+        //     throw new RuntimeException(errorMsg);
+        // }
         System.out.println("[Hotswap] successfully bind .");
+
+        System.getProperties().forEach((key, value) -> System.out.println("key = " + key + " value = " + value));
     }
 
     private static ClassLoader getClassLoader(File coreJarFile) throws Throwable {
