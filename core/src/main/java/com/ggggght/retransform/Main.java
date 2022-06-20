@@ -20,11 +20,19 @@ import com.intellij.xdebugger.XDebugProcess;
 import com.intellij.xdebugger.XDebuggerManager;
 import com.intellij.xdebugger.XDebuggerManagerListener;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.lang.instrument.Instrumentation;
-import java.lang.instrument.UnmodifiableClassException;
-import java.time.LocalDateTime;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -34,10 +42,31 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.boot.WebApplicationType;
 
 public class Main implements ProjectManagerListener {
+    static FileChannel channel;
+
     static {
         System.load(
             "/Users/wangzheng/github/hotswap/core/src/main/java/com/ggggght/util/libVM.dylib");
         System.out.println("[Agent] libVM.dylib loaded");
+
+        String userHome = System.getProperty("user.home");
+        Path path = Paths.get(userHome, "hotswap.log");
+        boolean exists = Files.exists(path);
+        if (!exists) {
+            try {
+                Files.createFile(path);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        try {
+            channel =
+                FileChannel.open(path, StandardOpenOption.CREATE, StandardOpenOption.WRITE,
+                    StandardOpenOption.READ);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     Project project;
@@ -51,8 +80,8 @@ public class Main implements ProjectManagerListener {
         this.project = project;
 
         Module[] modules = ModuleManager.getInstance(project).getModules();
-        Module mod =
-            Arrays.stream(modules).filter(m -> m.getName().contains(".main")).findFirst().get();
+        Module mod = modules[0];
+            // Arrays.stream(modules).filter(m -> m.getName().contains(".main")).findFirst().get();
         VirtualFile[] roots =
             ModuleRootManager.getInstance(mod).orderEntries().classes().getRoots();
         List<String> paths =
@@ -69,14 +98,19 @@ public class Main implements ProjectManagerListener {
         virtualFileManager.addAsyncFileListener(events -> {
             if (!isStart) return null;
 
+            Instrumentation inst =(Instrumentation) System.getProperties().get("INSTRUMENTATION_KEY");
+            AgentClassloader agentClassLoader =
+                (AgentClassloader) System.getProperties().get("CLASSLOADER_KEY");
+            System.out.println("========");
+            System.out.println("inst = " + inst);
+            System.out.println("agentClassLoader = " + agentClassLoader);
+            System.out.println("========");
             DynamicCompiler compiler = new DynamicCompiler(CoreBootstrap.classLoader);
 
             for (VFileEvent event : events) {
-                // event.getPath()
                 if (event.getFile() == null) continue;
                 String sourceName = event.getFile().getName();
                 if (!sourceName.contains(".java")) continue;
-                System.out.println("current changed fileName is: " + sourceName);
                 String fullPath = event.getFile().toNioPath().toString();
                 String src = fullPath.substring(fullPath.indexOf("src"));
                 src = src.substring(src.indexOf("src/main/java/") + 14)
@@ -84,6 +118,7 @@ public class Main implements ProjectManagerListener {
                     .replace(".java", "");
 
                 try {
+                    channel.write(ByteBuffer.wrap(("current changed fileName is: " + sourceName).getBytes()));
                     compiler.addSource(src, FileUtils.readFully(
                         new BufferedReader(new FileReader(
                             event.getFile().getPath()))));
@@ -92,34 +127,35 @@ public class Main implements ProjectManagerListener {
                 }
             }
 
-            // ClassLoader classLoader = this.getClass().getClassLoader();
-            // classLoader.getClass()
-            ClassLoader classLoader = this.getClass().getClassLoader();
             Map<String, byte[]> byteCodes = compiler.buildByteCodes();
-
-            System.out.println(
-                "this.getClass().getClassLoader() = " + classLoader);
-
-
             for (Map.Entry<String, byte[]> entry : byteCodes.entrySet()) {
                 byte[] value = entry.getValue();
-                // Class<?> aClass = agentClassLoader.defineClass(entry.getKey(), value);
+                Class<?> aClass = agentClassLoader.defineClass(entry.getKey(), value);
                 CompilerEvent compilerEvent = new CompilerEvent();
                 compilerEvent.message = "HotSwap compile";
                 compilerEvent.className = entry.getKey();
                 try {
-                    // inst.retransformClasses(aClass);
+                    inst.retransformClasses(aClass);
                     compilerEvent.success = true;
                 } catch (Exception e) {
                     compilerEvent.success = false;
-                    System.out.println(
-                        entry.getKey() + " retransform class failed: " + e.getMessage());
+                    try {
+                        channel.write(ByteBuffer.wrap(
+                            (entry.getKey() + "recompile failed").getBytes(StandardCharsets.UTF_8)));
+                    } catch (Exception ex) {
+                        throw new RuntimeException(ex);
+                    }
                     throw new RuntimeException(e);
                 } finally {
                     compilerEvent.commit();
                     System.out.println("event commit success");
                 }
 
+                try {
+                    channel.write(ByteBuffer.wrap("hello".getBytes()));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
                 System.out.println(entry.getKey() + " is retransformed");
             }
 
@@ -150,17 +186,26 @@ public class Main implements ProjectManagerListener {
         // https://intellij-support.jetbrains.com/hc/en-us/community/posts/4833708195474-How-do-I-listen-to-run-events-within-my-own-intellij-plugin-
         project.getMessageBus().connect().subscribe(
             ExecutionManager.EXECUTION_TOPIC,
+
             new ExecutionListener() {
-                @Override
-                public void processStarting(@NotNull String executorId,
-                    @NotNull ExecutionEnvironment env,
-                    @NotNull ProcessHandler handler) {
-                    ExecutionListener.super.processStarting(executorId, env, handler);
-                    // pid = Utils.getCurrentProjectPid(projectName);
-                    System.out.println("服务启动了...");
+                @Override public void processStarting(@NotNull String executorId,
+                    @NotNull ExecutionEnvironment env) {
+                    System.out.println("服务开始启动!");
+                    ExecutionListener.super.processStarting(executorId, env);
                     isStart = true;
                 }
             }
+            // new ExecutionListener() {
+            //     @Override
+            //     public void processStarting(@NotNull String executorId,
+            //         @NotNull ExecutionEnvironment env,
+            //         @NotNull ProcessHandler handler) {
+            //         ExecutionListener.super.processStarting(executorId, env, handler);
+            //         // pid = Utils.getCurrentProjectPid(projectName);
+            //         System.out.println("服务启动了...");
+            //         isStart = true;
+            //     }
+            // }
         );
 
         // ModuleManager moduleManager = ModuleManager.getInstance(project);

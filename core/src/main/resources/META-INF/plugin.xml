@@ -4,7 +4,7 @@
   <name>hotswap</name>
   <vendor email="wz9712203617@gmail.com">ggggght</vendor>
   <version>0.0.1</version>
-  <idea-version since-build="203" until-build="203.*"/>
+  <idea-version since-build="203" until-build="222.*"/>
 
   <description>
     <![CDATA[
@@ -35,5 +35,9 @@
 
   <extensions defaultExtensionNs="com.intellij">
     <runConfigurationExtension implementation="com.ggggght.retransform.RunConfig"/>
+  </extensions>
+
+  <extensions defaultExtensionNs="com.intellij">
+
   </extensions>
 </idea-plugin>

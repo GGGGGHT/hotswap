@@ -4,6 +4,8 @@ package com.ggggght.agent;
 // import com.intellij.openapi.extensions.PluginId;
 import java.io.File;
 import java.lang.instrument.Instrumentation;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Field;
 import java.net.URL;
 
@@ -12,7 +14,6 @@ import java.net.URL;
  */
 public class AgentBootstrap {
     private static final String BOOTSTRAP = "com.ggggght.core.CoreBootstrap";
-    private static final String MAINCLASS = "com.ggggght.retransform.Main";
     private static final String GET_INSTANCE = "getInstance";
     private static final String IS_BIND = "isBind";
     private static volatile ClassLoader classLoader;
@@ -35,26 +36,25 @@ public class AgentBootstrap {
             return;
         }
 
-        ClassLoader classloader = AgentBootstrap.class.getClassLoader();
-
-        // final ClassLoader agentLoader = getClassLoader(file);
-
-        Class<?> bootstrapClass = classloader.loadClass(BOOTSTRAP);
-        Object bootstrap = bootstrapClass.getMethod(GET_INSTANCE, Instrumentation.class,ClassLoader.class).invoke(null, inst,classloader);
+        final ClassLoader agentLoader = getClassLoader(file);
+        Class<?> bootstrapClass = agentLoader.loadClass(BOOTSTRAP);
+        Object bootstrap = bootstrapClass.getMethod(GET_INSTANCE, Instrumentation.class,ClassLoader.class).invoke(null, inst,agentLoader);
         boolean isBind = (Boolean) bootstrapClass.getMethod(IS_BIND).invoke(bootstrap);
         System.out.println("bootstrapClass = " + bootstrapClass);
-        System.out.println("agentBootStrap class loader  = " + classloader);
+        System.out.println("agentBootStrap class loader  = " + agentLoader);
         System.out.println("==================================================");
 
         System.getProperties().put("INSTRUMENTATION_KEY", inst);
-        System.getProperties().put("CLASSLOADER_KEY", classloader);
-        // if (!isBind) {
-        //     String errorMsg = "binding failed! .log for more details.";
-        //     throw new RuntimeException(errorMsg);
-        // }
-        System.out.println("[Hotswap] successfully bind .");
+        System.getProperties().put("CLASSLOADER_KEY", agentLoader);
+        if (!isBind) {
+            String errorMsg = "binding failed! .log for more details.";
+            throw new RuntimeException(errorMsg);
+        }
 
-        System.getProperties().forEach((key, value) -> System.out.println("key = " + key + " value = " + value));
+        System.out.println("[Hotswap] successfully bind .");
+        var pid = ManagementFactory.getRuntimeMXBean().getPid();
+        System.out.println("current PID = " + pid);
+
     }
 
     private static ClassLoader getClassLoader(File coreJarFile) throws Throwable {
